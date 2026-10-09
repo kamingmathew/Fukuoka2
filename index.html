@@ -1,1 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>福岡聖誕自駕之旅 · Family Winter Road Trip</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- Google Fonts: Noto Sans TC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body class="bg-[#F8F7F4] text-[#2B2927] min-h-screen pb-28 antialiased selection:bg-[#E2DDD5]" x-data="travelApp()">
 
+  <!-- App Header -->
+  <header class="sticky top-0 z-40 bg-[#F8F7F4]/90 backdrop-blur-md border-b border-[#EAE6DE] px-4 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div>
+        <div class="flex items-center space-x-1.5 text-[11px] uppercase tracking-wider text-[#8A8275] font-medium">
+          <span>🎄 2026 Winter Tour</span>
+          <span>·</span>
+          <span>連住6晚天神</span>
+        </div>
+        <h1 class="text-base font-bold tracking-tight text-[#2D2A26]">福岡 7 日 6 夜自駕輕旅行</h1>
+      </div>
+      <div class="flex items-center space-x-1.5 bg-[#EDE9E1] px-2.5 py-1 rounded-full text-[11px] font-medium text-[#575249]">
+        <span>👶 田田 (Justin) 2Y</span>
+        <span class="opacity-30">|</span>
+        <span>🚗 自駕</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main class="max-w-md mx-auto px-4 pt-3">
+
+    <!-- ==================== TAB 1: 每日行程 ==================== -->
+    <section x-show="currentTab === 'itinerary'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+      
+      <!-- 天數滑動選擇列 -->
+      <div class="flex space-x-2 overflow-x-auto hide-scrollbar py-1.5 mb-3">
+        <template x-for="(day, index) in days" :key="index">
+          <button 
+            @click="selectedDay = index"
+            :class="selectedDay === index ? 'bg-[#3B3733] text-white shadow-sm' : 'bg-white text-[#706B62] border border-[#E8E4DA]'"
+            class="flex-shrink-0 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 text-center active:scale-95">
+            <div class="font-bold" x-text="'Day ' + (index + 1)"></div>
+            <div class="text-[10px] opacity-75 mt-0.5" x-text="day.shortDate"></div>
+          </button>
+        </template>
+      </div>
+
+      <!-- 當日主題與天氣條 -->
+      <div class="bg-white rounded-2xl p-3.5 border border-[#EAE6DE] shadow-xs mb-3.5">
+        <div class="flex items-center justify-between border-b border-[#F2EFE9] pb-2.5 mb-2.5">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl" x-text="days[selectedDay].weather.icon"></span>
+            <div>
+              <div class="text-xs font-bold text-[#332F2B]" x-text="days[selectedDay].theme"></div>
+              <div class="text-[11px] text-[#7E786E]" x-text="days[selectedDay].weather.area + ' · ' + days[selectedDay].weather.desc"></div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-bold text-[#3B3733]" x-text="days[selectedDay].weather.temp"></div>
+            <div class="text-[10px] text-[#A0998E]" x-text="days[selectedDay].weather.wind"></div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-[#696359] bg-[#FAF8F5] rounded-xl px-2.5 py-1.5">
+          <span>💤 <b>田田午睡安排：</b><span x-text="days[selectedDay].napPlan"></span></span>
+          <span class="font-bold text-[#4B7355] text-[10px] bg-[#EAF2EC] px-1.5 py-0.5 rounded">20:30前返抵</span>
+        </div>
+      </div>
+
+      <!-- 每日卡片流 -->
+      <div class="space-y-3">
+        <template x-for="(card, cIndex) in days[selectedDay].cards" :key="cIndex">
+          <div class="bg-white rounded-2xl p-4 border border-[#EAE6DE] shadow-xs relative">
+            
+            <!-- 類別與時間 -->
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <span 
+                  :class="{
+                    'bg-[#EBF3ED] text-[#366847] border-[#D6E7DC]': card.type === 'spot',
+                    'bg-[#FBF1E6] text-[#A86422] border-[#F4DFC9]': card.type === 'food',
+                    'bg-[#ECEFF3] text-[#475569] border-[#DCE2E9]': card.type === 'transport',
+                    'bg-[#F6EEF5] text-[#863D7E] border-[#ECD5E9]': card.type === 'kids'
+                  }"
+                  class="text-[10px] px-2 py-0.5 rounded-md font-semibold border"
+                  x-text="card.typeLabel"></span>
+                <span class="text-[11px] font-semibold text-[#8C857B]" x-text="card.time"></span>
+              </div>
+              <span class="text-[11px] font-bold text-[#554F47]" x-text="card.budget"></span>
+            </div>
+
+            <!-- 卡片主標題與詳細描述 -->
+            <h3 class="text-sm font-bold text-[#2A2724] mb-1.5 flex items-center justify-between">
+              <span x-text="card.title"></span>
+              <span class="text-[10px] text-gray-400 font-normal" x-text="card.location"></span>
+            </h3>
+            <p class="text-xs text-[#635E56] leading-relaxed mb-3" x-text="card.desc"></p>
+
+            <!-- 標籤高亮 (景點故事、必吃、必買、代號) -->
+            <div class="flex flex-wrap gap-1.5 mb-3">
+              <template x-for="tag in card.tags" :key="tag.text">
+                <span 
+                  :class="{
+                    'bg-[#FEF2F2] text-[#B91C1C] border-[#FCA5A5]/40': tag.kind === 'food',
+                    'bg-[#FFFBEB] text-[#B45309] border-[#FCD34D]/50': tag.kind === 'buy',
+                    'bg-[#EFF6FF] text-[#1D4ED8] border-[#93C5FD]/50': tag.kind === 'story',
+                    'bg-[#F0FDF4] text-[#15803D] border-[#86EFAC]/50': tag.kind === 'booking',
+                    'bg-[#FAF5FF] text-[#7E22CE] border-[#D8B4FE]/50': tag.kind === 'kids'
+                  }"
+                  class="text-[10px] px-2 py-0.5 rounded-full border font-medium inline-flex items-center space-x-1"
+                  x-text="tag.text"></span>
+              </template>
+            </div>
+
+            <!-- 自駕導航按鈕與泊車資訊 -->
+            <div class="pt-2.5 border-t border-[#F5F2EB] flex justify-between items-center text-xs">
+              <div class="text-[11px] text-[#8A847A] flex items-center space-x-1">
+                <span>🅿️</span>
+                <span x-text="card.parking || '附設停車場'"></span>
+              </div>
+              <a 
+                :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(card.navQuery)" 
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center space-x-1 bg-[#3B3733] text-white px-3 py-1.5 rounded-xl text-[11px] font-semibold active:scale-95 transition-transform shadow-xs">
+                <span>🧭 Google Maps 導航</span>
+              </a>
+            </div>
+
+          </div>
+        </template>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 2: 機宿與交通資訊 ==================== -->
+    <section x-show="currentTab === 'info'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+      
+      <!-- 航班資訊 -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE6DE] mb-3.5 shadow-xs">
+        <h2 class="text-[11px] font-bold text-[#8C8478] uppercase tracking-wider mb-3 flex items-center space-x-1">
+          <span>✈️</span>
+          <span>大灣區航空來回航班資訊</span>
+        </h2>
+        <div class="space-y-3 text-xs">
+          <div class="border-b border-[#F5F2EC] pb-2.5">
+            <div class="flex justify-between font-bold text-[#2E2A27]">
+              <span>去程：HB308 (香港 ➔ 福岡)</span>
+              <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">已出票</span>
+            </div>
+            <div class="text-[#787268] mt-1">12月20日 (日) 09:30 HKG T2 ➔ 14:00 FUK 國際線</div>
+            <div class="text-[11px] text-[#9E978C] mt-0.5">航程約 3 小時 30 分鐘 · 抵步剛好接下午取車</div>
+          </div>
+          <div>
+            <div class="flex justify-between font-bold text-[#2E2A27]">
+              <span>回程：HB309 (福岡 ➔ 香港)</span>
+              <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">已出票</span>
+            </div>
+            <div class="text-[#787268] mt-1">12月26日 (六) 13:45 FUK 國際線 ➔ 16:50 HKG T1</div>
+            <div class="text-[11px] text-[#9E978C] mt-0.5">航程約 4 小時 05 分鐘 · 避開晚機返港疲累</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 住宿大本營 -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE6DE] mb-3.5 shadow-xs">
+        <div class="flex justify-between items-start mb-2">
+          <h2 class="text-[11px] font-bold text-[#8C8478] uppercase tracking-wider flex items-center space-x-1">
+            <span>🏨</span>
+            <span>核心大本營（連住 6 晚免換房）</span>
+          </h2>
+          <span class="text-[10px] bg-[#FAF5EB] text-[#A66E2E] font-semibold px-2 py-0.5 rounded">天神核心商圈</span>
+        </div>
+        <div class="text-xs space-y-1.5 text-[#302D29]">
+          <div class="font-bold text-sm text-[#25221F]">福岡天神日航都市酒店</div>
+          <div class="text-[#726C62]">Hotel JAL City Fukuoka Tenjin</div>
+          <div class="text-[#878074] text-[11px]">入住日期：12/20 - 12/26 (共 6 晚，退房 12/26 上午)</div>
+          <div class="text-[#878074] text-[11px]">電話：+81 92-712-5800</div>
+          <div class="text-[#878074] text-[11px]">泊車政策：立體機械停車場（約 ¥1,500 - ¥2,000 / 晚）</div>
+          <div class="pt-2">
+            <a href="https://www.google.com/maps/search/?api=1&query=Hotel+JAL+City+Fukuoka+Tenjin" target="_blank" rel="noopener" class="inline-flex items-center space-x-1 text-xs text-[#3B3733] font-bold underline">
+              <span>🧭 酒店 Google Maps 導航</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 自駕與緊急電話 -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE6DE] shadow-xs">
+        <h2 class="text-[11px] font-bold text-[#8C8478] uppercase tracking-wider mb-2.5 flex items-center space-x-1">
+          <span>🆘</span>
+          <span>自駕應急與日本緊急求助</span>
+        </h2>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <a href="tel:110" class="p-2.5 bg-red-50 text-red-800 rounded-xl text-center font-bold border border-red-100">
+            <div>警察報案</div>
+            <div class="text-base mt-0.5">110</div>
+          </a>
+          <a href="tel:119" class="p-2.5 bg-red-50 text-red-800 rounded-xl text-center font-bold border border-red-100">
+            <div>救護 / 火警</div>
+            <div class="text-base mt-0.5">119</div>
+          </a>
+          <div class="p-2.5 bg-[#F9F7F3] border border-[#EAE6DE] rounded-xl text-center col-span-2 text-[11px]">
+            <div class="font-bold text-[#3B3733]">JAF 道路救援（自駕拋錨 / 補胎）</div>
+            <div class="text-[#787268] mt-0.5 font-mono">#8139 或 0570-00-8139</div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ==================== TAB 3: 離線記帳與總預算 ==================== -->
+    <section x-show="currentTab === 'wallet'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100">
+      
+      <!-- 總額卡片 -->
+      <div class="bg-[#3B3733] text-white rounded-2xl p-4 mb-3.5 shadow-sm">
+        <div class="flex justify-between items-center text-xs opacity-75">
+          <span>全趟日常開銷實時累計</span>
+          <span>預計目標 ~¥119,000</span>
+        </div>
+        <div class="text-3xl font-bold tracking-tight mt-1.5" x-text="'¥ ' + totalExpense.toLocaleString()"></div>
+        <div class="text-[11px] opacity-70 mt-1 flex justify-between">
+          <span>約合 HK$ <span x-text="Math.round(totalExpense * 0.051).toLocaleString()"></span></span>
+          <span class="text-emerald-300 font-medium">✓ 資料安全保存在手機 LocalStorage</span>
+        </div>
+      </div>
+
+      <!-- 快速新增記帳條目 -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE6DE] mb-3.5 shadow-xs">
+        <h3 class="text-xs font-bold text-[#8C8478] mb-2 uppercase tracking-wider">新增開銷 (日圓 JPY)</h3>
+        <div class="space-y-2">
+          <input 
+            type="text" 
+            x-model="newExpense.item" 
+            placeholder="項目名稱 (例如: 華味鳥水炊晚餐、門司港油費)" 
+            class="w-full text-xs p-2.5 border border-[#E5E0D7] rounded-xl bg-[#FAF9F6] focus:bg-white focus:border-[#3B3733] outline-none transition-colors">
+          <div class="flex space-x-2">
+            <input 
+              type="number" 
+              x-model.number="newExpense.amount" 
+              placeholder="金額 (¥ JPY)" 
+              class="w-2/3 text-xs p-2.5 border border-[#E5E0D7] rounded-xl bg-[#FAF9F6] focus:bg-white focus:border-[#3B3733] outline-none transition-colors">
+            <button 
+              @click="addExpense()" 
+              class="w-1/3 bg-[#3B3733] text-white text-xs font-bold rounded-xl py-2 active:scale-95 transition-transform shadow-xs">
+              ＋ 記一筆
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 明細列表 -->
+      <div class="bg-white rounded-2xl p-4 border border-[#EAE6DE] shadow-xs">
+        <div class="flex justify-between items-center mb-2.5">
+          <h3 class="text-xs font-bold text-[#8C8478] uppercase tracking-wider">開銷歷史記錄</h3>
+          <span class="text-[10px] text-gray-400" x-text="expenses.length + ' 筆明細'"></span>
+        </div>
+        
+        <div x-show="expenses.length === 0" class="text-center py-6 text-xs text-[#9B958B]">
+          目前未有開銷紀錄。在上方新增第一筆記帳吧！
+        </div>
+
+        <div class="divide-y divide-[#F6F3EC] text-xs max-h-72 overflow-y-auto">
+          <template x-for="(exp, i) in expenses" :key="i">
+            <div class="py-2.5 flex justify-between items-center">
+              <div>
+                <span class="font-medium text-[#2E2B27]" x-text="exp.item"></span>
+                <span class="text-[10px] text-[#A29C91] block mt-0.5" x-text="exp.date"></span>
+              </div>
+              <div class="flex items-center space-x-2.5">
+                <span class="font-bold text-[#2A2724]" x-text="'¥' + exp.amount.toLocaleString()"></span>
+                <button 
+                  @click="removeExpense(i)" 
+                  class="text-gray-300 hover:text-red-500 text-sm px-1 leading-none">
+                  ✕
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- 底部固定導航欄 (Native Tab Bar) -->
+  <nav class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-[#EAE6DE] z-40 max-w-md mx-auto">
+    <div class="grid grid-cols-3 py-2 text-center text-[10px]">
+      <button 
+        @click="currentTab = 'itinerary'" 
+        :class="currentTab === 'itinerary' ? 'text-[#3B3733] font-bold' : 'text-[#9A9488]'"
+        class="flex flex-col items-center justify-center py-1 transition-colors">
+        <span class="text-base leading-none mb-1">🗺️</span>
+        <span>行程導覽</span>
+      </button>
+      <button 
+        @click="currentTab = 'info'" 
+        :class="currentTab === 'info' ? 'text-[#3B3733] font-bold' : 'text-[#9A9488]'"
+        class="flex flex-col items-center justify-center py-1 transition-colors">
+        <span class="text-base leading-none mb-1">🏨</span>
+        <span>機宿自駕</span>
+      </button>
+      <button 
+        @click="currentTab = 'wallet'" 
+        :class="currentTab === 'wallet' ? 'text-[#3B3733] font-bold' : 'text-[#9A9488]'"
+        class="flex flex-col items-center justify-center py-1 transition-colors">
+        <span class="text-base leading-none mb-1">💰</span>
+        <span>離線記帳</span>
+      </button>
+    </div>
+  </nav>
+
+  <script>
+    function travelApp() {
+      return {
+        currentTab: 'itinerary',
+        selectedDay: 0,
+        newExpense: { item: '', amount: null },
+        expenses: JSON.parse(localStorage.getItem('fk_fami_expenses') || '[]'),
+        
+        get totalExpense() {
+          return this.expenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        },
+
+        addExpense() {
+          if (!this.newExpense.item || !this.newExpense.amount) return;
+          this.expenses.unshift({
+            item: this.newExpense.item,
+            amount: Number(this.newExpense.amount),
+            date: new Date().toLocaleDateString('zh-HK')
+          });
+          localStorage.setItem('fk_fami_expenses', JSON.stringify(this.expenses));
+          this.newExpense.item = '';
+          this.newExpense.amount = null;
+        },
+
+        removeExpense(index) {
+          this.expenses.splice(index, 1);
+          localStorage.setItem('fk_fami_expenses', JSON.stringify(this.expenses));
+        },
+
+        days: [
+          /* DAY 1 */
+          {
+            shortDate: "12/20 日",
+            theme: "抵達福岡 · 機場順暢取車 · 光之街巨型聖誕樹",
+            napPlan: "14:15-15:30 車上或酒店房補眠",
+            weather: { area: "福岡市區", temp: "7°C - 12°C", desc: "晴間多雲", icon: "🌤️", wind: "微風 · 舒適" },
+            cards: [
+              {
+                type: "transport", typeLabel: "交通", time: "14:00 - 15:30", budget: "租車取車",
+                title: "福岡機場取車 ＆ 安裝幼童座椅", location: "國際線航廈",
+                desc: "HB308 順利抵步福岡。專車接駁至租車公司，核對 ETC 卡與幼童安全座椅，出發往天神大本營。",
+                tags: [
+                  { text: "重要：櫃檯確認加租 ETC 卡", kind: "booking" },
+                  { text: "田田車上順便小睡補眠", kind: "kids" }
+                ],
+                navQuery: "Toyota Rent a Car Fukuoka Airport",
+                parking: "租車門市專用車位"
+              },
+              {
+                type: "spot", typeLabel: "景點", time: "16:30 - 17:30", budget: "自由散步",
+                title: "天神地下街歐風漫步", location: "天神核心",
+                desc: "酒店放低行李後步行即達。石板大道與低調典雅嘅冬日聖誕櫥窗，平坦好推推車。",
+                tags: [
+                  { text: "必買：BAKE 起司塔 / 熱可頌", kind: "food" },
+                  { text: "全平地無障礙升降梯", kind: "kids" }
+                ],
+                navQuery: "Tenjin Underground Shopping Mall",
+                parking: "酒店泊車步行即達"
+              },
+              {
+                type: "spot", typeLabel: "市集", time: "18:00 - 20:00", budget: "約 ¥4,000",
+                title: "JR 博多城聖誕市集 (光之街)", location: "博多站前廣場",
+                desc: "62 萬顆 LED 壯麗光之街巨型聖誕樹，歐洲木屋市集瀰漫肉桂香氣，全家打卡首選！",
+                tags: [
+                  { text: "必買：年度限定熱朱古力馬克杯", kind: "buy" },
+                  { text: "必吃：德國熱烤香腸", kind: "food" },
+                  { text: "晚餐：博多城 9-10F 空天美食街", kind: "food" }
+                ],
+                navQuery: "JR Hakata City",
+                parking: "博多城地下停車場 (直通商場電梯)"
+              }
+            ]
+          },
+
+          /* DAY 2 (含福岡玩具美術館與高達) */
+          {
+            shortDate: "12/21 一",
+            theme: "海洋世界海豚秀 ➔ 福岡玩具美術館 ➔ 高達立像",
+            napPlan: "13:00-14:15 車上午睡 (海之中道 ➔ LaLaport 途中)",
+            weather: { area: "東區 / 海之中道", temp: "6°C - 11°C", desc: "晴時多雲", icon: "🐬", wind: "海邊微風 · 備帽子" },
+            cards: [
+              {
+                type: "spot", typeLabel: "景點", time: "09:30 - 12:15", budget: "門票 ¥5,200",
+                title: "海洋世界海之中道 (Marine World)", location: "東區沿海",
+                desc: "全館室內恆溫無障礙通道。觀賞博多灣全景海豚海獅秀、企鵝互動與壯麗黑潮大水槽。",
+                tags: [
+                  { text: "必看：海豚海獅明星水上秀", kind: "story" },
+                  { text: "館內推車全電梯友善", kind: "kids" }
+                ],
+                navQuery: "Marine World Uminonakamichi",
+                parking: "海之中道專用大型平面停車場"
+              },
+              {
+                type: "kids", typeLabel: "親子", time: "14:30 - 16:30", budget: "門票約 ¥2,200",
+                title: "福岡玩具美術館 (Fukuoka Toy Museum)", location: "LaLaport 福岡 1F",
+                desc: "田田專屬木育樂園！九州實木打造暖笠笠環境，設有杉木球池、拔蘿蔔採摘農田、木製屋台拉麵與 0-2 歲專屬安全區。",
+                tags: [
+                  { text: "必玩：幾千顆小木球木蛋泳池", kind: "kids" },
+                  { text: "安全：全實木圓角無塑膠", kind: "story" },
+                  { text: "放電首選：田田超愛煮飯仔", kind: "kids" }
+                ],
+                navQuery: "Fukuoka Toy Museum",
+                parking: "LaLaport 福岡室內立體停車場"
+              },
+              {
+                type: "spot", typeLabel: "購物", time: "16:30 - 18:30", budget: "商場採買",
+                title: "LaLaport 1:1 高達立像 ＆ 阿卡將本舖", location: "LaLaport 福岡",
+                desc: "走出戶外朝聖實物大 ν 高達立像（整點有燈光動作表演）；3F Akachan Honpo 補給日本幼童零食與保暖用品。",
+                tags: [
+                  { text: "必看：ν 高達夜間燈光動態展演", kind: "story" },
+                  { text: "必買：日本幼童防寒配件與餅乾", kind: "buy" },
+                  { text: "晚餐：商場寬敞美食街", kind: "food" }
+                ],
+                navQuery: "Mitsui Shopping Park LaLaport FUKUOKA",
+                parking: "商場專用停車位 (消費可抵扣)"
+              }
+            ]
+          },
+
+          /* DAY 3 (門司港、鐵道紀念館與海底隧道) */
+          {
+            shortDate: "12/22 二",
+            theme: "大正歐風門司港 · 九州鐵道紀念館 · 關門海底隧道",
+            napPlan: "13:00-14:30 嬰兒車上午睡 (大人海旁漫步) 或返程車上",
+            weather: { area: "北九州 / 門司港", temp: "5°C - 10°C", desc: "晴天冷涼", icon: "🚂", wind: "海峽風較強 · 穿防風羽絨" },
+            cards: [
+              {
+                type: "kids", typeLabel: "景點", time: "10:15 - 11:45", budget: "門票約 ¥600",
+                title: "九州鐵道紀念館 (Kyushu Railway Museum)", location: "門司港站旁",
+                desc: "田田火車迷朝聖！大人可抱住田田親自駕駛「迷你電車」（有紅綠燈平交道），戶外展示 9 部退役蒸汽大火車，室內有超大軌道模型！",
+                tags: [
+                  { text: "必玩：親手開迷你燕子號電車", kind: "kids" },
+                  { text: "精緻小巧：1.5小時玩晒不費力", kind: "story" }
+                ],
+                navQuery: "Kyushu Railway History Museum",
+                parking: "鐵道紀念館專屬停車場"
+              },
+              {
+                type: "food", typeLabel: "餐廳", time: "12:00 - 13:00", budget: "約 ¥4,000",
+                title: "門司港名物 燒咖哩 (焗烤芝士咖哩)", location: "門司港懷舊街區",
+                desc: "人氣老舖（如 Bear Fruits 或 伽哩本舖），焦香芝士配濃郁咖哩；備有溫和蛋包飯或烏冬啱田田食。",
+                tags: [
+                  { text: "必吃：焗烤半熟蛋起司燒咖哩", kind: "food" },
+                  { text: "幼童友善和風餐點", kind: "kids" }
+                ],
+                navQuery: "Bear Fruits Mojiko",
+                parking: "門司港港灣停車場"
+              },
+              {
+                type: "spot", typeLabel: "散步", time: "13:00 - 14:30", budget: "免費",
+                title: "藍翼門司吊橋 ＆ 關門人行海底隧道", location: "關門海峽",
+                desc: "田田於推車內舒適午睡。大人推車欣賞定時開合之藍翼吊橋，隨後自駕前往關門隧道，搭電梯落地下 50 米踩在兩縣交界線上！",
+                tags: [
+                  { text: "必拍：跨越福岡與山口縣界線", kind: "story" },
+                  { text: "推車平坦海旁漫步", kind: "kids" }
+                ],
+                navQuery: "Kanmon Pedestrian Tunnel (Moji Side)",
+                parking: "和布刈公園停車場"
+              },
+              {
+                type: "food", typeLabel: "晚餐", time: "18:15 - 19:45", budget: "約 ¥9,500",
+                title: "水炊料亭 博多華味鳥 天神店", location: "天神",
+                desc: "返抵天神享用熱騰騰水炊雞肉鍋。乳白色骨膠原清甜雞湯，煮熟細嫩雞肉與雜炊雞蛋粥，暖胃兼極適合幼童。",
+                tags: [
+                  { text: "必吃：華味鳥天然骨膠原水炊鍋", kind: "food" },
+                  { text: "雞湯雜炊粥幼童神物", kind: "kids" },
+                  { text: "重要：建議提早線上預約", kind: "booking" }
+                ],
+                navQuery: "博多華味鳥 天神店",
+                parking: "天神酒店周邊停車場"
+              }
+            ]
+          },
+
+          /* DAY 4 (糸島海景與溫暖壁爐 Cafe) */
+          {
+            shortDate: "12/23 三",
+            theme: "糸島冬日海岸線 · 純白鳥居 · 柴火壁爐暖心 Cafe",
+            napPlan: "13:15-14:30 沿海公路自駕回程車上午睡",
+            weather: { area: "糸島市海岸", temp: "6°C - 10°C", desc: "多雲有陽光", icon: "🌊", wind: "日本海季風強 · 著防風帽" },
+            cards: [
+              {
+                type: "spot", typeLabel: "絕景", time: "10:15 - 11:30", budget: "免費參觀",
+                title: "櫻井二見之浦 夫婦岩與純白鳥居", location: "糸島玄界灘",
+                desc: "玄界灘深藍波浪拍打純白鳥居與連理神石。冬日日本海蒼茫壯闊，下車拍照 10 分鐘即進入室內避風！",
+                tags: [
+                  { text: "冬日氛圍感絕美拍照點", kind: "story" },
+                  { text: "風大請為田田戴耳罩防風帽", kind: "kids" }
+                ],
+                navQuery: "Sakurai Futamigaura Couple Stones",
+                parking: "二見之浦海灘收費停車場"
+              },
+              {
+                type: "food", typeLabel: "暖心Cafe", time: "11:45 - 13:15", budget: "約 ¥4,500",
+                title: "Bakery Restaurant CURRENT (或 Palm Beach)", location: "糸島野北海岸",
+                desc: "糸島最溫暖嘅原木海景烘焙餐廳！冬天室內有真正的【柴火壁爐】，落地大玻璃眺望無敵海景。現烤新鮮麵包、熱湯與法式吐司，暖笠笠！",
+                tags: [
+                  { text: "特點：真柴火壁爐歐陸小木屋感", kind: "story" },
+                  { text: "必吃：自家出爐香濃熱麵包與濃湯", kind: "food" },
+                  { text: "大空間好推車配幼童椅", kind: "kids" }
+                ],
+                navQuery: "Bakery Restaurant CURRENT Itoshima",
+                parking: "餐廳專用海景停車位"
+              },
+              {
+                type: "spot", typeLabel: "放電", time: "15:00 - 17:30", budget: "免費",
+                title: "大濠公園湖畔漫步 ＆ 兒童遊樂場", location: "福岡中央區",
+                desc: "返回市區氣候舒適。平坦環湖步道推車極好行，田田於滑梯鞦韆放電，大人於湖畔星巴克嘆手沖熱咖啡。",
+                tags: [
+                  { text: "必吃：順路買花鹽焦糖布丁", kind: "food" },
+                  { text: "推車全程無障礙環湖", kind: "kids" }
+                ],
+                navQuery: "Ohori Park Fukuoka",
+                parking: "大濠公園收費停車場"
+              }
+            ]
+          },
+
+          /* DAY 5 (平安夜：麵包超人館與運河城落雪水秀) */
+          {
+            shortDate: "12/24 四",
+            theme: "平安夜 · 麵包超人館狂歡 ➔ 運河城降雪水舞秀",
+            napPlan: "12:30-14:30 返回天神 JAL City 酒店房平躺深層午睡",
+            weather: { area: "博多 / 天神", temp: "5°C - 10°C", desc: "平安夜晴朗", icon: "❄️", wind: "晚間冷涼 · 備齊厚褸" },
+            cards: [
+              {
+                type: "kids", typeLabel: "親子", time: "09:45 - 12:15", budget: "門票 ¥4,400",
+                title: "福岡麵包超人兒童博物館", location: "博多 Riverain 5-6F",
+                desc: "全室內恆溫軟膠場館！2 歲田田最愛。歌舞見面會、軟膠安全滑梯，果醬爺爺麵包工廠現烤可愛卡通造型麵包。",
+                tags: [
+                  { text: "必買：果醬爺爺角色紅豆麵包", kind: "buy" },
+                  { text: "2歲放電天堂安全防撞", kind: "kids" }
+                ],
+                navQuery: "Fukuoka Anpanman Children's Museum",
+                parking: "博多 Riverain 地下停車場 (電梯直通)"
+              },
+              {
+                type: "transport", typeLabel: "休息", time: "12:30 - 15:00", budget: "免費充電",
+                title: "返回酒店深層午睡 ＆ 大人養精蓄銳", location: "天神 JAL City",
+                desc: "自駕 8 分鐘返酒店。畀田田在大床平躺深層午睡補足精神，大人房內放鬆喝茶，準備迎接平安夜重頭戲！",
+                tags: [
+                  { text: "黃金作息保護：避免幼童扭計", kind: "kids" }
+                ],
+                navQuery: "Hotel JAL City Fukuoka Tenjin",
+                parking: "酒店專屬立體停車場"
+              },
+              {
+                type: "spot", typeLabel: "盛宴", time: "17:30 - 20:00", budget: "平安夜大餐",
+                title: "運河城限定降雪水舞秀 ＆ 敘敘苑和牛", location: "博多運河城",
+                desc: "B1 太陽廣場觀賞【Canal Aqua Panorama 平安夜降雪水秀】（3D光雕+音樂噴泉+漫天飄雪）；隨後於敘敘苑獨立包廂慢烤頂級和牛！",
+                tags: [
+                  { text: "必看：18:00 / 19:00 平安夜落雪水秀", kind: "story" },
+                  { text: "必吃：特選和牛牛小排與海鮮煎餅", kind: "food" },
+                  { text: "包廂獨立私隱零干擾", kind: "kids" }
+                ],
+                navQuery: "Canal City Hakata",
+                parking: "博多運河城特大地下停車場"
+              }
+            ]
+          },
+
+          /* DAY 6 (聖誕日：福岡塔與天神商圈) */
+          {
+            shortDate: "12/25 五",
+            theme: "聖誕節 · 百道濱海濱 ＆ 福岡塔 · 天神歡樂採買",
+            napPlan: "12:30-14:30 推車散步或回房安穩午睡",
+            weather: { area: "百道濱 / 天神", temp: "6°C - 11°C", desc: "聖誕晴天", icon: "🗼", wind: "微風宜人" },
+            cards: [
+              {
+                type: "spot", typeLabel: "地標", time: "10:00 - 12:15", budget: "門票 ¥1,600",
+                title: "福岡塔 ＆ 百道濱海濱公園", location: "百道濱海濱",
+                desc: "日本最高海濱塔，塔身換上巨型聖誕樹主題點燈光雕！沙灘木棧道推車悠閒散步，眺望博多灣全景。",
+                tags: [
+                  { text: "必拍：聖誕巨型點燈全家福", kind: "story" },
+                  { text: "木棧步道平順好推車", kind: "kids" }
+                ],
+                navQuery: "Fukuoka Tower",
+                parking: "福岡塔專用收費停車場"
+              },
+              {
+                type: "spot", typeLabel: "購物", time: "14:30 - 17:30", budget: "自由採買",
+                title: "天神核心百貨商圈巡禮", location: "天神商圈",
+                desc: "慢逛岩田屋（IWATAYA）、福岡三越與 Bic Camera，採買日系高品質童裝、生活質感選物與聖誕限定甜點伴手禮。",
+                tags: [
+                  { text: "必買：福砂屋雙目糖蜂蜜蛋糕", kind: "buy" },
+                  { text: "童裝旗艦專區寬敞母嬰室", kind: "kids" }
+                ],
+                navQuery: "Iwataya Main Store Tenjin",
+                parking: "酒店步行圈無須移車"
+              },
+              {
+                type: "food", typeLabel: "壽司", time: "18:00 - 19:45", budget: "約 ¥12,000",
+                title: "葫蘆壽司 (ひょうたん寿司) 或和食定食", location: "天神新天町",
+                desc: "天神超人氣老牌壽司店，當季新鮮握壽司；備有熟玉子燒、茶碗蒸與熟鯛魚湯啱田田享用。飯後散步返酒店收拾行李。",
+                tags: [
+                  { text: "必點：當季特選握壽司盛合", kind: "food" },
+                  { text: "步行返回酒店輕鬆安睡", kind: "kids" }
+                ],
+                navQuery: "ひょうたん寿司 本店",
+                parking: "步行 8 分鐘返酒店"
+              }
+            ]
+          },
+
+          /* DAY 7 (回程) */
+          {
+            shortDate: "12/26 六",
+            theme: "順暢滿油還車 · 福岡機場免稅採買 · 返港",
+            napPlan: "14:30-16:30 HB309 飛機客艙小睡",
+            weather: { area: "福岡機場", temp: "7°C - 12°C", desc: "晴朗", icon: "✈️", wind: "微風 · 適合飛行" },
+            cards: [
+              {
+                type: "transport", typeLabel: "交通", time: "10:30 - 11:30", budget: "油費約 ¥3,500",
+                title: "加油滿油 ＆ Toyota 租車門市還車", location: "福岡機場店",
+                desc: "酒店悠閒享用早餐 Check-out 後出發，於機場旁加油站加滿油，專車接送至國際線出境大堂。",
+                tags: [
+                  { text: "重要：索取最後一次加油收據", kind: "booking" },
+                  { text: "核對 ETC 卡扣款結算", kind: "booking" }
+                ],
+                navQuery: "Toyota Rent a Car Fukuoka Airport",
+                parking: "還車檢驗道"
+              },
+              {
+                type: "spot", typeLabel: "手信", time: "11:30 - 13:45", budget: "自由購買",
+                title: "福岡機場國際線免稅店最後衝刺", location: "國際線出境禁區",
+                desc: "通關迅速。禁區內採買博多通饅頭、明太子仙貝與手信，準備登機返港。",
+                tags: [
+                  { text: "必買：博多通りもん (通饅頭)", kind: "buy" },
+                  { text: "大灣區航空 HB309 準時登機", kind: "story" }
+                ],
+                navQuery: "Fukuoka Airport International Terminal",
+                parking: "機場出境航廈"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  </script>
+</body>
+</html>
